@@ -1,0 +1,45 @@
+name: ci
+
+# Build + test on every push / PR. A Postgres service container is provided so any
+# integration tests (and Flyway, if exercised) have a real database to talk to.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: auth
+          POSTGRES_USER: auth
+          POSTGRES_PASSWORD: auth
+        ports:
+          - 5432:5432
+        # Wait until Postgres is accepting connections before the build starts.
+        options: >-
+          --health-cmd "pg_isready -U auth"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # Default datasource points at localhost:5432, which maps to the service above.
+      SECUREBANK_JWT_SECRET: ci-test-secret-ci-test-secret-0123456789abcdef
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build and test (generates gRPC stubs, runs unit tests)
+        run: mvn -B -ntp verify
