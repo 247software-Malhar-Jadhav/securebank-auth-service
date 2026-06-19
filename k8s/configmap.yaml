@@ -1,0 +1,14 @@
+# Non-secret configuration for auth-service. Mounted as environment variables by the
+# Deployment. Secrets (DB password, JWT signing key) live in the Secret, never here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  labels:
+    app: auth-service
+data:
+  SPRING_PROFILES_ACTIVE: "docker"
+  # Postgres host on the cluster network (database-per-service: db name 'auth').
+  POSTGRES_USER: "auth"
+  # Token lifetimes can be tuned without rebuilding the image.
+  SECUREBANK_JWT_ISSUER: "securebank"
