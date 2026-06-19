@@ -1,0 +1,30 @@
+# ============================================================================
+# auth-service — 'docker' profile. Activated with SPRING_PROFILES_ACTIVE=docker.
+# Differs from the default only in network locations: inside compose/k8s the database
+# is reachable by hostname 'postgres' (not localhost). Ports stay per-spec.
+# ============================================================================
+spring:
+  datasource:
+    # 'postgres' is the service/host name on the docker/k8s network.
+    url: jdbc:postgresql://postgres:5432/auth
+    username: ${POSTGRES_USER:auth}
+    password: ${POSTGRES_PASSWORD:auth}
+
+# HTTP + gRPC ports are identical to the spec; restated for clarity.
+server:
+  port: 8081
+
+grpc:
+  server:
+    port: 9091
+    # Bind on all interfaces so other containers/pods can reach the gRPC server.
+    address: 0.0.0.0
+
+securebank:
+  jwt:
+    # In docker/k8s the secret is REQUIRED from the environment (no insecure default).
+    secret: ${SECUREBANK_JWT_SECRET}
+
+logging:
+  level:
+    com.securebank.auth: INFO

@@ -1,0 +1,81 @@
+# ============================================================================
+# auth-service — default (local) configuration.
+# Ports & schema are FIXED by MICROSERVICES_SPEC.md: HTTP 8081, gRPC 9091, db 'auth'.
+# The 'docker' profile (application-docker.yml) overrides hostnames for compose/k8s.
+# ============================================================================
+spring:
+  application:
+    name: auth-service
+
+  # Java 21 virtual threads: each request runs on a lightweight thread. Ideal for the
+  # IO-bound auth workload (DB + BCrypt). Mandated by the spec.
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    # Local dev assumes Postgres on localhost:5432 with a database named 'auth'.
+    url: jdbc:postgresql://localhost:5432/auth
+    username: auth
+    password: auth
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # Flyway owns the schema; Hibernate must never auto-DDL.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    # Schema-per-service: everything lives in the 'auth' schema.
+    schemas: auth
+    default-schema: auth
+    create-schemas: true
+
+# --- HTTP server (REST) -----------------------------------------------------
+server:
+  port: 8081
+
+# --- gRPC server (net.devh) -------------------------------------------------
+grpc:
+  server:
+    port: 9091
+
+# --- JWT (bound to JwtProperties) ------------------------------------------
+securebank:
+  jwt:
+    issuer: securebank
+    # Secret comes from the environment. The default here is for LOCAL DEV ONLY and is
+    # long enough (>= 32 bytes) for HS256. NEVER use this default in production.
+    secret: ${SECUREBANK_JWT_SECRET:local-dev-secret-change-me-0123456789-abcdef}
+    access-ttl-seconds: 900        # 15 minutes
+    refresh-ttl-seconds: 604800    # 7 days
+
+# --- Observability / actuator ----------------------------------------------
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true            # exposes /actuator/health/{liveness,readiness}
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# --- OpenAPI / Swagger UI ---------------------------------------------------
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.securebank.auth: INFO
