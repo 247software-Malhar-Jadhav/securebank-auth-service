@@ -36,6 +36,25 @@
         <javax.annotation.version>1.3.2</javax.annotation.version>
     </properties>
 
+    <!--
+      Import the gRPC BOM so EVERY io.grpc:* artifact (including grpc-api pulled
+      transitively by grpc-server-spring-boot-starter) converges on ${grpc.version}.
+      Without this, the starter dragged in an older grpc-api while grpc-netty-shaded
+      expected a newer one, causing a runtime
+      ClassNotFoundException: io.grpc.InternalConfiguratorRegistry.
+    -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-bom</artifactId>
+                <version>${grpc.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <!-- ===== Web / REST ===== -->
         <dependency>
