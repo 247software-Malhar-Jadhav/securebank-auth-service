@@ -53,7 +53,7 @@ securebank:
     # Secret comes from the environment. The default here is for LOCAL DEV ONLY and is
     # long enough (>= 32 bytes) for HS256. NEVER use this default in production.
     secret: ${SECUREBANK_JWT_SECRET:local-dev-secret-change-me-0123456789-abcdef}
-    access-ttl-seconds: 900        # 15 minutes
+    access-ttl-seconds: 86400      # 24 hours (demo-friendly; shorten in production)
     refresh-ttl-seconds: 604800    # 7 days
 
 # --- Observability / actuator ----------------------------------------------
